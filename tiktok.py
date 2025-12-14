@@ -17,28 +17,6 @@ GECKO_PATH = r"C:\Users\Admin\Desktop\TANPHAT\Manguonmotrongkhoahocjdulieu\DOAN_
 FIREFOX_BINARY_PATH = r"C:\Program Files\Mozilla Firefox\firefox.exe"
 
 
-def random_sleep(min_s=2, max_s=5):
-    """Ngủ ngẫu nhiên để giống người"""
-    sleep_time = random.uniform(min_s, max_s)
-    print(f"   ...Nghỉ {sleep_time:.2f}s...")
-    time.sleep(sleep_time)
-
-def human_scroll_list(driver, steps=3):
-    """
-    Cuộn danh sách creator như người thật
-    """
-    for _ in range(steps):
-        distance = random.randint(200, 500)
-        driver.execute_script(f"window.scrollBy(0, {distance});")
-        time.sleep(random.uniform(0.8, 2.0))
-
-def human_hover_and_click(driver, element, action):
-    try:
-        action.move_to_element(element).pause(random.uniform(0.8, 2.0)).perform()
-        time.sleep(random.uniform(0.5, 1.2))
-        element.click()
-    except:
-        driver.execute_script("arguments[0].click();", element)
 
 # --- 3. KHỞI TẠO DRIVER ---
 ser = Service(GECKO_PATH)
@@ -51,13 +29,49 @@ options.set_preference("useAutomationExtension", False)
 
 driver = None 
 
-
 print("WARNING: Hãy TẮT HOÀN TOÀN Firefox thật trước khi chạy!")
 print("Đang khởi động Firefox với Profile cá nhân...")
 
 driver = webdriver.Firefox(options=options, service=ser)
 wait = WebDriverWait(driver, 20)
 action = ActionChains(driver)
+
+
+def random_sleep(min_s=2, max_s=5):
+    """Ngủ ngẫu nhiên để giống người"""
+    sleep_time = random.uniform(min_s, max_s)
+    print(f"   ...Nghỉ {sleep_time:.2f}s...")
+    time.sleep(sleep_time)
+
+def human_scroll_virtual_container(driver, wait, moves=6):
+    container = wait.until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "div.virtualCardResults")
+        )
+    )
+    for i in range(moves):
+        # khoảng scroll giống người
+        dy = random.randint(300, 900)
+        before = driver.execute_script(
+            "return arguments[0].scrollTop;", container
+        )
+        # scroll trực tiếp container
+        driver.execute_script(
+            "arguments[0].scrollTop += arguments[1];",
+            container, dy
+        )
+        time.sleep(random.uniform(0.6, 1.5))
+        after = driver.execute_script(
+            "return arguments[0].scrollTop;", container
+        )
+        # cuộn ngược nhẹ (giống người đọc lại)
+        if random.random() < 0.15:
+            back = random.randint(100, 250)
+            driver.execute_script(
+                "arguments[0].scrollTop -= arguments[1];",
+                container, back
+            )
+            time.sleep(random.uniform(0.4, 0.9))
 
 # Vào trang Ads
 target_url = "https://ads.tiktok.com/creative/forpartners/creator/explore?region=row"
@@ -66,4 +80,4 @@ driver.get(target_url)
 driver.maximize_window()
 time.sleep(5) 
 print("Tiêu đề trang hiện tại:", driver.title)
-
+human_scroll_virtual_container(driver, wait, moves=random.randint(6, 10))
